@@ -80,8 +80,8 @@ def reload_and_check():
     if success:
         notifyAndWait()
     else:
-        time.sleep(timeout)
         print(f"No Festivalticket button found. Retrying in {timeout} seconds.")
+        time.sleep(timeout)
         reload_and_check()
 
 # VARIABLES
