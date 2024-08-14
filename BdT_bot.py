@@ -46,7 +46,7 @@ def click_festivalticket_button(wanted_item):
         print(f"Error clicking Festivalticket button: {e}")
 
 def notifyAndWait():
-    notify()
+    sendNotification()
     # Looping to keep the browser open and allow user to checkout
     while True:
         time.sleep(1)
@@ -61,10 +61,11 @@ def initNotify():
         if user_input.lower() == 'yes':
             print("Launching chrome ...")
             break
+    return notify
  
-def notify():
+def sendNotification():
     try:
-        notify.send('OUE OUE OUE')
+        notify.send('Ticket Reserved !')
     except:
         print("ERROR - Could not send notification.")
     # HUGE SUCCESS MESSAGE THAT I CAN SEE IN THE CONSOLE
@@ -76,6 +77,7 @@ def notify():
 def reload_and_check():
     open_page(page_url)
     click_unwanted_filters(not_wanted_items)
+    # Should be in a loop over the wanted_items
     success = click_festivalticket_button(wanted_items[0]) or click_festivalticket_button(wanted_items[1])
     if success:
         notifyAndWait()
@@ -87,13 +89,13 @@ def reload_and_check():
 # VARIABLES
 driver_path = '/usr/local/bin/chromedriver'
 page_url = "https://www.tixforgigs.com/en-GB/Resale/52202/bucht-der-traumer-2024-helenesee-frankfurt-oder"
-timeout = 15
+timeout = 10
 wanted_items = ['Festivalticket', 'Förderticket']
-not_wanted_items = ['Parkticket', 'Caravan Ticket', 'Sunday Ticket']
+not_wanted_items = ['Parkticket', 'Sunday Ticket', 'Caravan Ticket']
 
 # MAIN
 if __name__ == "__main__":
-    initNotify()
+    notify = initNotify()
     
     # initChromeDriver
     service = ChromeDriverService(driver_path)
