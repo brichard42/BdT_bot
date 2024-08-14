@@ -1,22 +1,8 @@
 import time
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-
-# Define the path to the ChromeDriver executable
-driver_path = '/usr/local/bin/chromedriver'
-page_url = "https://www.tixforgigs.com/en-GB/Resale/52202/bucht-der-traumer-2024-helenesee-frankfurt-oder"
-
-# Create a Service object for ChromeDriver
-service = Service(driver_path)
-service.start()
-
-# Initialize Chrome WebDriver using the service
-# Options for window size and creating chrome profile
-options = webdriver.ChromeOptions()
-options.add_argument('--start-maximized')
-options.add_argument('--user-data-dir=/Users/brichard/Library/Application Support/Google/Chrome/Default/')
-driver = webdriver.Chrome(service=service, options=options)
-
+from selenium.webdriver.chrome.service import Service as ChromeDriverService
+from notify_run import Notify
+from selenium.webdriver.common.by import By
 
 def open_page(url):
     driver.get(url)
@@ -27,7 +13,6 @@ def open_page(url):
     except:
         pass
 
-from selenium.webdriver.common.by import By
 def click_filter(filter_name):
     try:
         filter_button = driver.find_elements(By.XPATH, f"//span[text()='{filter_name}']")
@@ -42,48 +27,81 @@ def click_unwanted_filters(not_wanted_items):
 
 def click_festivalticket_button(wanted_item):
     try:
-        # Locate all cards with the headline "Festivalticket"
         ticket_cards = driver.find_elements(By.XPATH, f"//div[contains(@class, 'gc c8r8 fxc')]//div[contains(@class, 'headline') and text()='{wanted_item}']")
         print(f"Found {len(ticket_cards)} {wanted_item} buttons.")
         
         for card in ticket_cards:
-            # Find the parent element of the headline to locate the entire card
             parent_card = card.find_element(By.XPATH, "./ancestor::div[contains(@class, 'gc c8r8 fxc')]")
             
             try:
-                # Locate the clickable part inside the card
                 clickable_part = parent_card.find_element(By.XPATH, ".//span[contains(@data-bind, 'click:$root.addTicketResaleToCart')]")
-                # Click the clickable part
                 clickable_part.click()
                 print("Clicked on a Festivalticket button.")
                 return True
             except:
                 print("Ticket Already Reserved !")
-        print("No Festivalticket button found. Retrying in 30 seconds.")
         return False
             
     except Exception as e:
         print(f"Error clicking Festivalticket button: {e}")
 
-def exit():
-    # HUGE SUCCESS MESASAGE THAT I CAN SEE IN THE CONSOLE
+def notifyAndWait():
+    notify()
+    # Looping to keep the browser open and allow user to checkout
+    while True:
+        time.sleep(1)
+       
+       
+def initNotify():
+    notify = Notify()
+    msg = notify.register()
+    print(msg)
+    while True:
+        user_input = input("Scan QR code to subscribe to notification then type 'yes': ")
+        if user_input.lower() == 'yes':
+            print("Launching chrome ...")
+            break
+ 
+def notify():
+    try:
+        notify.send('OUE OUE OUE')
+    except:
+        print("ERROR - Could not send notification.")
+    # HUGE SUCCESS MESSAGE THAT I CAN SEE IN THE CONSOLE
     print("========================================")
     print("========================================")
     print("TICKET RESERVED !")
     print("========================================")
-    while True:
-        time.sleep(1)
-    
 
+def reload_and_check():
+    open_page(page_url)
+    click_unwanted_filters(not_wanted_items)
+    success = click_festivalticket_button(wanted_items[0]) or click_festivalticket_button(wanted_items[1])
+    if success:
+        notifyAndWait()
+    else:
+        time.sleep(timeout)
+        print(f"No Festivalticket button found. Retrying in {timeout} seconds.")
+        reload_and_check()
+
+# VARIABLES
+driver_path = '/usr/local/bin/chromedriver'
+page_url = "https://www.tixforgigs.com/en-GB/Resale/52202/bucht-der-traumer-2024-helenesee-frankfurt-oder"
+timeout = 15
 wanted_items = ['Festivalticket', 'Förderticket']
 not_wanted_items = ['Parkticket', 'Caravan Ticket', 'Sunday Ticket']
 
-def reload_and_check(success):
-    time.sleep(30)
-    if success:
-        exit()
-    open_page(page_url)
-    click_unwanted_filters(not_wanted_items)
-    reload_and_check(click_festivalticket_button(wanted_items[0]) or click_festivalticket_button(wanted_items[1]))
+# MAIN
+if __name__ == "__main__":
+    initNotify()
     
-reload_and_check(False)
+    # initChromeDriver
+    service = ChromeDriverService(driver_path)
+    service.start()
+
+    options = webdriver.ChromeOptions()
+    options.add_argument('--start-maximized')
+    options.add_argument('--user-data-dir=/Users/brichard/Library/Application Support/Google/Chrome/Default/')
+    driver = webdriver.Chrome(service=service, options=options)
+
+    reload_and_check()
