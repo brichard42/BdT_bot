@@ -97,7 +97,7 @@ not_wanted_items = ['Parkticket', 'Sunday Ticket', 'Caravan Ticket']
 if __name__ == "__main__":
     notify = initNotify()
     
-    # initChromeDriver
+    # init ChromeDriver
     service = ChromeDriverService(driver_path)
     service.start()
 
